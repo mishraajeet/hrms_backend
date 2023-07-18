@@ -16,8 +16,8 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 const mailData = {
                     from: 'ajeetmagnet@gmail.com',
-                    to: 'pajitive@gmail.com',
-                    subject: 'Sending Email using Node.js',
+                    to: userInfo.email,
+                    subject: 'Please reset you password',
                     text: 'That was easy!',
                     html: `<b>Hey there! </b>
                        <br> This is our first message sent with Nodemailer<br/>`,

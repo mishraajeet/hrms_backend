@@ -110,7 +110,7 @@ const User = mongoose.Schema({
 },{ timestamps: true });
 
 User.methods.generateAuthToken = function(){
-    let genToken =  jwt.sign({_id:this._id,role:this.role}, 'structure_private_key',{expiresIn:60*60});
+    let genToken =  jwt.sign({_id:this._id,role:this.userType}, 'structure_private_key');
     return genToken;
 }
 module.exports = mongoose.model('user',User);
