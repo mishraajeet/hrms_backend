@@ -11,12 +11,12 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = {
-    mail: async (userInfo) => {
+    mail: async (email) => {
         try {
             return new Promise((resolve, reject) => {
                 const mailData = {
                     from: 'ajeetmagnet@gmail.com',
-                    to: userInfo.email,
+                    to: email,
                     subject: 'Please reset you password',
                     text: 'That was easy!',
                     html: `<b>Hey there! </b>

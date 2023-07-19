@@ -26,10 +26,7 @@ const User = mongoose.Schema({
         type:String
     },
     contactInfo:{
-        phoneNo: {
-            type: Number,
-            unique:true,
-        },
+        phoneNo: Number,
         countryCode: String,
         isPrivate: {
             type: Boolean,
