@@ -1,33 +1,25 @@
- const reference = require("./reference.model");
- const user = require('../user/user.model');
+const reference = require("./reference.model");
+const user = require('../user/user.model');
 
 module.exports = {
-    referedUser: async (refUser) =>{
-        try{
-            return new Promise(async(resolve,reject) =>{
+    referedUser: async (refUser) => {
+        try {
+            return new Promise(async (resolve, reject) => {
                 const referedUser = {
-                    "referedFrom" : {},
+                    "referedFrom": {},
                     "referedTo": {}
                 }
-                if(refUser.referredUserId){
-                   let referredUser = await user.findById(refUser.referredUserId)
-                   referedUser["referedFrom"]["invitationCode"] = referredUser.invitationCode
-                   referedUser["referedFrom"]["userType"] = referredUser.userType
-                   referedUser["referedFrom"]["userId"] = referredUser._id
-                } else{
-                    let referredUser = await user.findOne({"userType": "superadmin"})
-                    referedUser["referedFrom"]["invitationCode"] = referredUser.invitationCode
-                    referedUser["referedFrom"]["userType"] = referredUser.userType
-                    referedUser["referedFrom"]["userId"] = referredUser._id
+                if (!refUser && refUser.referedFrom && refUser.referedFrom.invitationCode) {
+                    let referredUser = await user.findOne({ "userType": "superadmin" })
+                    refUser["referedFrom"]["invitationCode"] = referredUser.invitationCode
+                    refUser["referedFrom"]["userType"] = referredUser.userType
+                    refUser["referedFrom"]["userId"] = referredUser._id
                 }
-                referedUser["referedTo"]["invitationCode"] = refUser.invitationCode
-                referedUser["referedTo"]["userType"] = refUser.userType
-                referedUser["referedTo"]["userId"] = refUser._id
-                let ref = new reference(referedUser);
+                let ref = new reference(refUser);
                 await ref.save();
                 resolve(true)
             })
-        } catch(e){
+        } catch (e) {
             console.log(e.message)
         }
     }

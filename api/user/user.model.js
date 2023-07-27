@@ -90,19 +90,19 @@ const User = mongoose.Schema({
     },
     userType:{
         type:String, 
-        enum:['individual','company','reseller','superadmin'],
+        enum:['individual','Company','Reseller','superadmin'],
         default:'individual'
     }, // For role base API
     orgLogo: String,
-    GST: String,
+    GstNo: String,
+    userName: String,
     address: {
+      address1: String,
+      address2: String,
       country: String,
       state: String,
       city: String,
       pincode: Number,
-      landMark: String,
-      houseNo: String,
-      area: String,
     }
 },{ timestamps: true });
 

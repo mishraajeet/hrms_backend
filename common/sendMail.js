@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = {
-    mail: async (email) => {
+    mail: async (email,url) => {
         try {
             return new Promise((resolve, reject) => {
                 const mailData = {
@@ -19,8 +19,7 @@ module.exports = {
                     to: email,
                     subject: 'Please reset you password',
                     text: 'That was easy!',
-                    html: `<b>Hey there! </b>
-                       <br> This is our first message sent with Nodemailer<br/>`,
+                    html: `<b>Plese click <a href="${url}">here</a> to reset password </b>`,
                 };
                 transporter.sendMail(mailData, function (err, info) {
                     if (err) {
