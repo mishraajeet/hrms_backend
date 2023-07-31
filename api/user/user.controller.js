@@ -7,6 +7,23 @@ const refmodule = require("../reference/reference.model");
 
 module.exports = {
 
+  getAllUsers: async(req,res,next)=>{
+    try{
+        let pageNumber = req.body.initial;
+        let pageSize = 10;
+
+        let filter ={}
+        if(req.body.isActive)
+          filter["isUserActive"] = true
+        let result = await user.find(filter)
+                    .sort({createAt:-1})
+                    .skip((pageNumber -1)* pageSize)
+                    .limit(pageSize)
+        res.status(200).send({result: true, data: result});
+    }catch(e){
+        console.log(e);
+    }
+},
   signUp: async (req, res, next) => {
     try {
       let result = await user.findOne({ email: req.body.email });

@@ -5,6 +5,7 @@ const isValidate = require('../..//auth/isAutherizedUser')
 const isValidateRole = require('../../auth/isValidateRole')
 
 router.post('/signup',isValidate,controller.signUp);
+router.post('/getAllUsers',controller.getAllUsers);
 router.post('/login',controller.resellerLogin);
 router.post('/createSuperAdmin',controller.createSuperAdmin);
 
