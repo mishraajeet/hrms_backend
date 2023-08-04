@@ -27,6 +27,8 @@ app.use((req,res,next)=>{
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended:true}));
 
+app.use(express.static('client'));
+
 app.use(express.static('public'))
 
 
@@ -35,13 +37,13 @@ const storage = multer.diskStorage({
       callBack(null,'./public/logo')
     },
     filename: (req,file,callBack) => {
-      callBack( null, `product_${file.originalname}`)
+      callBack( null, `logo_${file.originalname}`)
     }
   })
   
   var imgUpload = multer({storage: storage });
   
-  app.post('/company_logo', imgUpload.single('file'),(req,res,next)=>{
+  app.post('/company_logo', imgUpload.single('image'),(req,res,next)=>{
      const file = req.file
      if(!file){
        const error = new Error("Please upload a file...");
@@ -51,6 +53,11 @@ const storage = multer.diskStorage({
    });
 
 require('./router')(app);
+
+app.get('*',(req,res) => {
+  res.sendFile(path.join(__dirname ,'client/index.html'));
+});
+
 app.listen(process.env.PORT || 3000,'0.0.0.0',()=>{
     console.log("server is runnig on port 3000...");
 })

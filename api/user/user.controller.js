@@ -45,7 +45,7 @@ module.exports = {
         referedUser["referedFrom"]["userId"] = req.body.referedUserId
 
         await reference.referedUser(referedUser)
-        let url = `http://localhost:4200/setpassword/${newUser._id}`
+        let url = `https://admin.magn8.one/setpassword/${newUser._id}`
         await sendMail.mail(req.body.email, url)
         res.status(200).send({ result: true, message: "Please check your mail.." });
       }
