@@ -2,13 +2,13 @@ const mongoose = require('mongoose');
 var jwt = require("jsonwebtoken");
 
 const User = mongoose.Schema({
-    firstName: {
+    fullName: {
         type:String,
     },
-    lastName: {
-        type:String,
+    DOB:  {
+        type: Date
     },
-    email:{ 
+    Email:{ 
         type:String,
         unique:true,
         trim:true,
@@ -18,92 +18,65 @@ const User = mongoose.Schema({
         match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,'Please fill a valid email address'] 
     },
     password:{
-        require:true,
         type:String
     },
-    contactInfo:{
-        phoneNo: Number,
-        countryCode: String,
-        isPrivate: {
-            type: Boolean,
-            default: false
-        },
-        isEditable: {
-            type: Boolean,
-            default: true
-        }
+    EmployeeNumberSeries: {
+        type: String,
+        required: true
     },
-    invitationCode: String,
-    industry: {
-        Value: String,
-        isEditable: {
-            type: Boolean,
-            default: true
-        }
+    EmployeeNo: {
+        type: String,
+        required: true
     },
-    jobRole: {
-        Value: String,
-        isEditable: {
-            type: Boolean,
-            default: true
-        }
+    FatherName: {
+        type: String
     },
-    experience: {
-        Value: String,
-        isEditable: {
-            type: Boolean,
-            default: true
-        }
+    SpouseName: {
+        type: String,
     },
-    companyName: {
-        Value: String,
-        isEditable: {
-            type: Boolean,
-            default: true
-        }
+    AdhaarNumber: {
+        type: String,
     },
     img: {
         url: String,
-        isEditable: {
-            type: Boolean,
-            default: true
-        }
     },
     status: {
         Value: String,
-        isEditable: {
-            type: Boolean,
-            default: true
-        }
     },
-    isUserActive: {
-        type: Boolean,
-        default: true
+    Gender: {
+        type: String,
     },
-    isUserVerified: {
-        type: Boolean,
-        default: false
+    ReportingManager: {
+        type: String
     },
-    userType:{
-        type:String, 
-        enum:['individual','Company','Reseller','superadmin'],
-        default:'individual'
-    }, // For role base API
-    orgLogo: String,
-    GstNo: String,
-    userName: String,
-    address: {
-      address1: String,
-      address2: String,
-      country: String,
-      state: String,
-      city: String,
-      pincode: Number,
+    MobileNumber: {
+        type: String
+    },
+    Status: {
+        type: String
+    },
+    DateOfJoining: {
+        type: Date
+    },
+    ProbationPeriod: {
+        type: Number
+    },
+    ConfirmationDate: {
+        type: String
+    },
+    EmergencyContactName: {
+        type: String
+    },
+    EmergencyContactNumber: {
+        type: String
+    },
+    isEditableByEmp: {
+        type: String
     }
 },{ timestamps: true });
 
 User.methods.generateAuthToken = function(){
-    let genToken =  jwt.sign({_id:this._id,role:this.userType}, 'structure_private_key');
+    let genToken =  jwt.sign({_id:this._id}, 'hra_private_key');
     return genToken;
 }
 module.exports = mongoose.model('user',User);

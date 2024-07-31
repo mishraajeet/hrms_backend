@@ -2,8 +2,7 @@ const user = require("./user.model");
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
 const sendMail = require('../../common/sendMail');
-const reference = require('../reference/reference.controller');
-const refmodule = require("../reference/reference.model");
+const SequenceNumber = require('./sequenceNumber.model');
 
 module.exports = {
 
@@ -13,6 +12,21 @@ module.exports = {
         let pageSize = 10;
 
         let filter ={}
+        let search = []
+
+        if(req.body.searchUsers){
+          const regexPattern = new RegExp(req.body.searchUsers, 'i');
+
+          let firstFilter = {}
+          let secondFilter = {}
+          firstFilter["fullName"] = { $regex: regexPattern }
+          secondFilter["EmployeeNo"] = { $regex: regexPattern }
+
+          search.push(firstFilter)
+          search.push(secondFilter)
+          filter["$or"] = search
+        }
+
         if(req.body.isActive)
           filter["isUserActive"] = true
         let result = await user.find(filter)
@@ -24,37 +38,45 @@ module.exports = {
         console.log(e);
     }
 },
-  signUp: async (req, res, next) => {
-    try {
-      let result = await user.findOne({ email: req.body.email });
-      if (result) res.status(208).send({ message: "User already exist..." });
-      else {
-        let User = new user(req.body);
-        User.invitationCode = (req.body.userType.charAt(0)).toUpperCase() + parseInt(Date.now() + Math.random())
-        let newUser = await User.save();
-        const referedUser = {
-          "referedFrom": {},
-          "referedTo": {}
-        }
-        referedUser["referedTo"]["invitationCode"] = newUser.invitationCode
-        referedUser["referedTo"]["userType"] = newUser.userType
-        referedUser["referedTo"]["userId"] = newUser._id
 
-        referedUser["referedFrom"]["invitationCode"] = req.body.invitationCode
-        referedUser["referedFrom"]["userType"] = req.body.referedUserType
-        referedUser["referedFrom"]["userId"] = req.body.referedUserId
+getEmpBirthday: async(req,res,next)=>{
+   try{
+  const today = new Date();
+  const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-        await reference.referedUser(referedUser)
-        let url = `https://admin.magn8.one/setpassword/${newUser._id}`
-        await sendMail.mail(req.body.email, url)
-        res.status(200).send({ result: true, message: "Please check your mail.." });
+    let filter = {
+      "DOB": {
+        $gte: startOfDay,
+        $lte: endOfDay
       }
-    } catch (e) {
-      next(e);
     }
-  },
+    let result = await user.find(filter)
+    res.status(200).send({result: true, data: result});
+   } catch(e){
+    next(e)
+   }
+},
 
-  setPassword: async (req, res, next) => {
+getNewJoiningEmp: async(req,res,next)=>{
+  try{
+ const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(),1);
+ const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1 ,0,23,59,59,999);
+ 
+   let filter = {
+     "DateOfJoining": {
+       $gt: startOfMonth,
+       $lte: endOfMonth
+     }
+   }
+   let result = await user.find(filter)
+   res.status(200).send({result: true, data: result});
+  } catch(e){
+   next(e)
+  }
+},
+
+setPassword: async (req, res, next) => {
     try {
       let isUser = await user.findById(req.body.id).populate('isUserVerified');
       if (!isUser) res.status(404).send({ message: "User not found..." });
@@ -144,49 +166,18 @@ module.exports = {
     }
   },
 
-  // ******************************Start Indivisual User**************************//
-  signUpUser: async (req, res, next) => {
+  // ******************************Start Employee**************************//
+  registerUser: async (req, res, next) => {
     try {
-      let result = await user.findOne({ email: req.body.email });
-      if (result) res.status(208).send({ message: "User already exist..." });
+      let result = await user.findOne({ EmployeeNumberSeries: req.body.EmployeeNumberSeries, isActive: true });
+      if (result) res.status(208).send({ message: "Employee Number Series already exist..." });
       else {
         let User = new user(req.body);
         await User.save();
-        await sendMail.mail(req.body.email)
-        res.status(200).send({ result: true, message: "Please check your mail.." });
+        await SequenceNumber.findByIdAndUpdate({_id: req.body.seriel_id},{isActive: true})
+        // await sendMail.mail(req.body.email)
+        res.status(200).send({ result: true, message: "user registered successfully!" });
       }
-    } catch (e) {
-      next(e);
-    }
-  },
-
-
-  RegisterUserProfile: async (req, res, next) => {
-    try {
-      let refData = {
-        "referedFrom": {},
-        "referedTo": {}
-      }
-      let refUser = ''
-      if (req.body.invitationCode) {
-        refUser = await user.findOne({ invitationCode: req.body.invitationCode }).populate('invitationCode', 'userType');
-      } else {
-        refUser = await user.findOne({ "userType": "superadmin" })
-      }
-      refData["referedFrom"]["invitationCode"] = refUser.invitationCode
-      refData["referedFrom"]["userType"] = refUser.userType
-      refData["referedFrom"]["userId"] = refUser._id
-
-      let invitationCode = (req.user.role.charAt(0)).toUpperCase() + parseInt(Date.now() + Math.random())
-      refData["referedTo"]["invitationCode"] = invitationCode
-      refData["referedTo"]["userType"] = req.user.role
-      refData["referedTo"]["userId"] = req.user._id
-
-      req.body.invitationCode = invitationCode
-      let ref = new refmodule(refData);
-      await ref.save();
-      await user.updateOne({ email: req.body.email }, req.body);
-      res.status(200).send({ result: true, message: "User registered successfully..." });
     } catch (e) {
       next(e);
     }
@@ -228,7 +219,23 @@ module.exports = {
     } catch (e) {
       next(e);
     }
-  }
-  // ******************************End Indivisual User**************************//
+  },
 
+  saveSequenceNumber: async(req,res,next)=>{
+    try{
+        let result = await SequenceNumber.findOne({"isActive": false})
+        if(result){
+          res.status(200).send({result: true, message: "next sequence number", data: result})
+        } else {
+          const lastRecord = await SequenceNumber.findOne({},{},{ sort: { 'createdAt' : -1 } })
+          const seq = parseInt(lastRecord.sequence) + 1; 
+          const obj = {"isActive": false,sequence: seq}
+          let sequence = new SequenceNumber(obj)
+          let data = await sequence.save();
+          res.status(200).send({result: true, message: "new sequence number", data: data})
+        }
+    } catch(e){
+      next(e)
+    }
+  }
 };
