@@ -2,13 +2,7 @@ const mongoose = require('mongoose');
 var jwt = require("jsonwebtoken");
 
 const User = mongoose.Schema({
-    fullName: {
-        type:String,
-    },
-    DOB:  {
-        type: Date
-    },
-    Email:{ 
+    email:{ 
         type:String,
         unique:true,
         trim:true,
@@ -20,59 +14,6 @@ const User = mongoose.Schema({
     password:{
         type:String
     },
-    EmployeeNumberSeries: {
-        type: String,
-        required: true
-    },
-    EmployeeNo: {
-        type: String,
-        required: true
-    },
-    FatherName: {
-        type: String
-    },
-    SpouseName: {
-        type: String,
-    },
-    AdhaarNumber: {
-        type: String,
-    },
-    img: {
-        url: String,
-    },
-    status: {
-        Value: String,
-    },
-    Gender: {
-        type: String,
-    },
-    ReportingManager: {
-        type: String
-    },
-    MobileNumber: {
-        type: String
-    },
-    Status: {
-        type: String
-    },
-    DateOfJoining: {
-        type: Date
-    },
-    ProbationPeriod: {
-        type: Number
-    },
-    ConfirmationDate: {
-        type: String
-    },
-    EmergencyContactName: {
-        type: String
-    },
-    EmergencyContactNumber: {
-        type: String
-    },
-    isEditableByEmp: {
-        type: String
-    }
 },{ timestamps: true });
 
 User.methods.generateAuthToken = function(){

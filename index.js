@@ -34,22 +34,22 @@ app.use(express.static('public'))
 
 const storage = multer.diskStorage({
     destination: (req,file,callBack) =>{
-      callBack(null,'./public/logo')
+      callBack(null,'./public/profile')
     },
     filename: (req,file,callBack) => {
-      callBack( null, `logo_${file.originalname}`)
+      callBack( null, `profile_${file.originalname}`)
     }
   })
   
   var imgUpload = multer({storage: storage });
   
-  app.post('/company_logo', imgUpload.single('image'),(req,res,next)=>{
+  app.post('/emp_profile', imgUpload.single('image'),(req,res,next)=>{
      const file = req.file
      if(!file){
        const error = new Error("Please upload a file...");
        error.httpStatusCode = 400
      }
-     res.send({imageUrl: `/logo/${req.file.filename}`});
+     res.send({imageUrl: `/profile/${req.file.filename}`});
    });
 
 require('./router')(app);

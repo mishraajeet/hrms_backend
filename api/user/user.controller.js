@@ -1,4 +1,5 @@
 const user = require("./user.model");
+const profile = require('./profile.model');
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
 const sendMail = require('../../common/sendMail');
@@ -29,7 +30,7 @@ module.exports = {
 
         if(req.body.isActive)
           filter["isUserActive"] = true
-        let result = await user.find(filter)
+        let result = await profile.find(filter)
                     .sort({createAt:-1})
                     .skip((pageNumber -1)* pageSize)
                     .limit(pageSize)
@@ -37,6 +38,18 @@ module.exports = {
     }catch(e){
         console.log(e);
     }
+},
+
+getReportingManager: async(req,res,next)=>{
+  try{
+      let filter ={}
+      // filter["isUserActive"] = true
+      let result = await profile.find(filter).select('fullName -_id')
+                  .sort({fullName:-1})
+      res.status(200).send({result: true, data: result});
+  }catch(e){
+      console.log(e);
+  }
 },
 
 getEmpBirthday: async(req,res,next)=>{
@@ -51,7 +64,7 @@ getEmpBirthday: async(req,res,next)=>{
         $lte: endOfDay
       }
     }
-    let result = await user.find(filter)
+    let result = await profile.find(filter)
     res.status(200).send({result: true, data: result});
    } catch(e){
     next(e)
@@ -69,7 +82,7 @@ getNewJoiningEmp: async(req,res,next)=>{
        $lte: endOfMonth
      }
    }
-   let result = await user.find(filter)
+   let result = await profile.find(filter)
    res.status(200).send({result: true, data: result});
   } catch(e){
    next(e)
@@ -101,30 +114,8 @@ setPassword: async (req, res, next) => {
         let User = new user(req.body);
         let salt = await bcrypt.genSalt(10);
         User.password = await bcrypt.hash(req.body.password, salt);
-        User.invitationCode = (req.body.userType.charAt(0)).toUpperCase() + parseInt(Date.now() + Math.random())
         await User.save();
         res.status(200).send({ result: true, message: "Super Admin Is created" });
-      }
-    } catch (e) {
-      next(e);
-    }
-  },
-
-  resellerLogin: async (req, res, next) => {
-    try {
-      let isUser = await user.findOne({ email: req.body.email });
-      if (isUser && isUser.userType === 'individual')
-        res.status(404).send({ result: false, message: "Unautherised user..." });
-      else if (isUser == undefined || !isUser)
-        res.status(404).send({ result: false, message: "Invalid User Name...!" });
-      else {
-        let isValidPassword = await bcrypt.compare(req.body.password, isUser.password);
-        if (!isValidPassword)
-          res.status(400).send({ result: false, message: "Invalid Password...!" });
-        else {
-          let token = isUser.generateAuthToken();
-          res.status(200).header("x-auth-token", token).send({ result: true, email: isUser.email, id: isUser._id, role: isUser.userType, invitationCode: isUser.invitationCode });
-        }
       }
     } catch (e) {
       next(e);
@@ -134,9 +125,7 @@ setPassword: async (req, res, next) => {
   login: async (req, res, next) => {
     try {
       let isUser = await user.findOne({ email: req.body.email });
-      if (isUser && isUser.userType !== 'individual')
-        res.status(404).send({ result: false, message: "Unautherised user..." });
-      else if (isUser == undefined || !isUser)
+      if (isUser == undefined || !isUser)
         res.status(404).send({ result: false, message: "Invalid User Name...!" });
       else {
         let isValidPassword = await bcrypt.compare(req.body.password, isUser.password);
@@ -144,7 +133,7 @@ setPassword: async (req, res, next) => {
           res.status(400).send({ result: false, message: "Invalid Password...!" });
         else {
           let token = isUser.generateAuthToken();
-          res.status(200).header("x-auth-token", token).send({ result: true, email: isUser.email, id: isUser._id, role: isUser.userType, invitationCode: isUser.invitationCode });
+          res.status(200).header("x-auth-token", token).send({ result: true, email: isUser.email, role: isUser.userType });
         }
       }
     } catch (e) {
@@ -169,12 +158,20 @@ setPassword: async (req, res, next) => {
   // ******************************Start Employee**************************//
   registerUser: async (req, res, next) => {
     try {
-      let result = await user.findOne({ EmployeeNumberSeries: req.body.EmployeeNumberSeries, isActive: true });
+      let result = await profile.findOne({ EmployeeNumberSeries: req.body.EmployeeNumberSeries, isActive: true });
       if (result) res.status(208).send({ message: "Employee Number Series already exist..." });
       else {
-        let User = new user(req.body);
-        await User.save();
+        let userProfile = new profile(req.body);
+        await userProfile.save();
         await SequenceNumber.findByIdAndUpdate({_id: req.body.seriel_id},{isActive: true})
+        let credential = {
+          email: req.body.email,
+          password: 'test@123'
+        }
+        let User = new user(credential);
+        let salt = await bcrypt.genSalt(10);
+        User.password = await bcrypt.hash(req.body.password, salt);
+        await User.save();
         // await sendMail.mail(req.body.email)
         res.status(200).send({ result: true, message: "user registered successfully!" });
       }
@@ -189,7 +186,7 @@ setPassword: async (req, res, next) => {
         _id: req.query.id
       }
       delete req.body._id;
-      let result = await user.findByIdAndUpdate(find, req.body);
+      let result = await profile.findByIdAndUpdate(find, req.body);
       if (result)
         res.status(200).send({ result: true, message: "profile updated successfully!" })
     } catch (e) {
@@ -228,11 +225,19 @@ setPassword: async (req, res, next) => {
           res.status(200).send({result: true, message: "next sequence number", data: result})
         } else {
           const lastRecord = await SequenceNumber.findOne({},{},{ sort: { 'createdAt' : -1 } })
-          const seq = parseInt(lastRecord.sequence) + 1; 
-          const obj = {"isActive": false,sequence: seq}
-          let sequence = new SequenceNumber(obj)
-          let data = await sequence.save();
-          res.status(200).send({result: true, message: "new sequence number", data: data})
+          if(lastRecord){
+            const seq = parseInt(lastRecord.sequence) + 1; 
+            const obj = {"isActive": false,sequence: seq}
+            let sequence = new SequenceNumber(obj)
+            let data = await sequence.save();
+            res.status(200).send({result: true, message: "new sequence number", data: data})
+          } else {
+            const seq = 100
+            const obj = {"isActive": false,sequence: seq}
+            let sequence = new SequenceNumber(obj)
+            let data = await sequence.save();
+            res.status(200).send({result: true, message: "new sequence number", data: data})
+          }
         }
     } catch(e){
       next(e)
