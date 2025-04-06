@@ -8,13 +8,16 @@ router.post('/registerUser',controller.registerUser);
 router.post('/getAllUsers',controller.getAllUsers);
 router.get('/getReportingManager',controller.getReportingManager);
 router.put('/updateProfile?:id',controller.updateUserProfile);
+
 router.get('/getEmpBirthday',controller.getEmpBirthday);
 router.get('/getNewJoiningEmp',controller.getNewJoiningEmp);
 
 router.get('/saveSequenceNumber',controller.saveSequenceNumber);
-
 router.post('/login',controller.login);
 router.post('/createSuperAdmin',controller.createSuperAdmin);
+router.get('/getLeaveBalence/:id',controller.getLeaveBalence);
+
+router.post('/getUserProfile',controller.getUserProfile);
 
 // ********************for All Users****************************//
 router.put('/deactivateUser?:id',controller.sofDeleteUser);

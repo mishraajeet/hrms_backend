@@ -1,5 +1,4 @@
 const user = require("./user.model");
-const profile = require('./profile.model');
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
 const sendMail = require('../../common/sendMail');
@@ -30,7 +29,7 @@ module.exports = {
 
         if(req.body.isActive)
           filter["isUserActive"] = true
-        let result = await profile.find(filter)
+        let result = await user.find(filter)
                     .sort({createAt:-1})
                     .skip((pageNumber -1)* pageSize)
                     .limit(pageSize)
@@ -44,7 +43,7 @@ getReportingManager: async(req,res,next)=>{
   try{
       let filter ={}
       // filter["isUserActive"] = true
-      let result = await profile.find(filter).select('fullName -_id')
+      let result = await user.find(filter).select('fullName')
                   .sort({fullName:-1})
       res.status(200).send({result: true, data: result});
   }catch(e){
@@ -64,7 +63,7 @@ getEmpBirthday: async(req,res,next)=>{
         $lte: endOfDay
       }
     }
-    let result = await profile.find(filter)
+    let result = await user.find(filter)
     res.status(200).send({result: true, data: result});
    } catch(e){
     next(e)
@@ -82,7 +81,7 @@ getNewJoiningEmp: async(req,res,next)=>{
        $lte: endOfMonth
      }
    }
-   let result = await profile.find(filter)
+   let result = await user.find(filter)
    res.status(200).send({result: true, data: result});
   } catch(e){
    next(e)
@@ -158,20 +157,15 @@ setPassword: async (req, res, next) => {
   // ******************************Start Employee**************************//
   registerUser: async (req, res, next) => {
     try {
-      let result = await profile.findOne({ EmployeeNumberSeries: req.body.EmployeeNumberSeries, isActive: true });
+      let result = await user.findOne({ EmployeeNumberSeries: req.body.EmployeeNumberSeries, isActive: true });
       if (result) res.status(208).send({ message: "Employee Number Series already exist..." });
       else {
-        let userProfile = new profile(req.body);
-        await userProfile.save();
-        await SequenceNumber.findByIdAndUpdate({_id: req.body.seriel_id},{isActive: true})
-        let credential = {
-          email: req.body.email,
-          password: 'test@123'
-        }
-        let User = new user(credential);
+        let password = 'test@123'
         let salt = await bcrypt.genSalt(10);
-        User.password = await bcrypt.hash(req.body.password, salt);
+        req.body.password = await bcrypt.hash(password, salt);
+        let User = new user(req.body);
         await User.save();
+        await SequenceNumber.findByIdAndUpdate({_id: req.body.seriel_id},{isActive: true})
         // await sendMail.mail(req.body.email)
         res.status(200).send({ result: true, message: "user registered successfully!" });
       }
@@ -186,7 +180,7 @@ setPassword: async (req, res, next) => {
         _id: req.query.id
       }
       delete req.body._id;
-      let result = await profile.findByIdAndUpdate(find, req.body);
+      let result = await user.findByIdAndUpdate(find, req.body);
       if (result)
         res.status(200).send({ result: true, message: "profile updated successfully!" })
     } catch (e) {
@@ -240,6 +234,28 @@ setPassword: async (req, res, next) => {
           }
         }
     } catch(e){
+      next(e)
+    }
+  },
+
+  getLeaveBalence: async(req,res,next)=>{
+    try{
+      let user = req.params.id;
+      let leave = await profile.findById(user).select('leaveBalence')
+      res.status(200).send({result: true, message: 'availabe leave balance', data: leave});
+    } catch(e){
+      next(e)
+    }
+  },
+
+  getUserProfile: async (req,res,next)=> {
+    try{
+        let email = req.body.email;
+        let filter = {}
+        filter['email'] = email;
+        await user.find(filter)
+        res.status(200).send({result: true, message: 'current user profile'})
+    }catch(e){
       next(e)
     }
   }

@@ -2,22 +2,15 @@ const mongoose = require('mongoose');
 var jwt = require("jsonwebtoken");
 
 const position = mongoose.Schema({
-    code: {
+    name: {
         type: String,
         require: true
     },
-    description: {
-        type: String
-    },
-    isActive: {
-        type:Boolean,
-        default:true
-    }
+    value: []
 },{ timestamps: true });
 
 const emp_position = mongoose.Schema({
-    position: String,
-    sub_position: [position]
+    emp_position: [position]
 })
 
 module.exports = mongoose.model('emp_position',emp_position);

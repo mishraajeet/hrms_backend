@@ -6,19 +6,11 @@ module.exports = {
 
   getAllPositions: async(req,res,next)=>{
     try{
-        let pageNumber = req.body.initial;
-        let pageSize = 100;
 
         let filter ={}
-        if(req.body.type)
-          filter["type"] = req.body.type
-        if(req.body.isActive)
-          filter["isActive"] = true
 
         let result = await employeePosition.find(filter)
                     .sort({createAt:-1})
-                    .skip((pageNumber -1)* pageSize)
-                    .limit(pageSize)
         res.status(200).send({result: true, data: result});
     }catch(e){
         console.log(e);
@@ -38,13 +30,14 @@ addPosition: async (req, res, next) => {
 
   updatePosition: async (req, res, next) => {
     try {
-      let find = {
-        _id: req.query.id
-      }
-      delete req.body._id;
-      let result = await employeePosition.findByIdAndUpdate(find, req.body);
+      let id =new mongoose.Types.ObjectId(req.query.id.trim());
+      let result = await employeePosition.findByIdAndUpdate(
+        id,
+        { $push: { sub_position: req.body } },
+        { new: true, useFindAndModify: false }
+      );
       if (result)
-        res.status(200).send({ result: true, message: "updated successfully!" })
+        res.status(200).send({ result: true, message: "updated successfully!",data:result })
     } catch (e) {
       next(e);
     }
@@ -53,9 +46,31 @@ addPosition: async (req, res, next) => {
  
   deleteemployeePosition: async (req, res, next) => {
     try {
-      let result = await employeePosition.findByIdAndDelete(req.query.id);
+      let result = await employeePosition.findByIdAndDelete(req.query.id,{new: true});
       if (result)
-        res.status(200).send({ result: true, message: "successfully delete." });
+        res.status(200).send({ result: true, message: "successfully delete.",data: result });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+
+  deleteSubPosition: async (req, res, next) => {
+    try {
+      let id =new mongoose.Types.ObjectId(req.query.id.trim());
+      let sub_id = new mongoose.Types.ObjectId(req.body.id.trim());
+      let result = await employeePosition.findByIdAndUpdate(
+        id,
+        {
+          $pull: {
+            sub_position: { _id: sub_id}
+          }
+        },{
+          new: true
+        }
+      );
+      if (result)
+        res.status(200).send({ result: true, message: "successfully delete.",data: result });
     } catch (e) {
       next(e);
     }

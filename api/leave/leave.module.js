@@ -23,6 +23,7 @@ const leave = monggose.Schema({
         default: 'Pending'
     },
     approver: {
-        type: String
+         type: monggose.Schema.ObjectId,
+          ref: 'user'
     }
 })
