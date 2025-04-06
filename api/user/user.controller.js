@@ -123,7 +123,7 @@ setPassword: async (req, res, next) => {
 
   login: async (req, res, next) => {
     try {
-      let isUser = await user.findOne({ email: req.body.email });
+      let isUser = await user.findOne({ Email: req.body.email });
       if (isUser == undefined || !isUser)
         res.status(404).send({ result: false, message: "Invalid User Name...!" });
       else {
@@ -142,7 +142,7 @@ setPassword: async (req, res, next) => {
 
   forgetPassword: async (req, res, next) => {
     try {
-      let isUser = await user.findOne({ email: req.body.email })
+      let isUser = await user.findOne({ Email: req.body.email })
       if (isUser == undefined || !isUser)
         res.status(208).send({ result: false, message: "Invalid Email'Id...!" });
       else {
